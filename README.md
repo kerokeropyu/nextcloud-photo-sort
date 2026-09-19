@@ -12,13 +12,15 @@ NASはrcloneでWebDAVマウントし、ローカルフォルダとして扱う�
 - Ollama(Qwen2.5-VL)に画像を送信し、あらかじめ定義したカテゴリ
   (人物 / 風景 / 食事 / 書類 / スクリーンショット / その他)に分類
 - 分類結果をログに記録
+- 分類カテゴリ名をそのままアルバム名として、Nextcloud Photosのアルバムへ
+  WebDAV(MKCOL/COPY)でファイルを追加(アルバムが無ければ自動作成)
 - 処理済みファイルのパスをJSONファイルに記録し、二重処理を防止
-  (分類に失敗したファイルは記録せず、次回実行時に再試行)
+  (分類・アルバム追加のいずれかに失敗したファイルは記録せず、次回実行時に再試行)
 - 1回実行して終了する設計(cronなどからの定期実行を想定。常駐ループはしない)
 
 以下は未実装です:
 
-- Nextcloud Photos Albums APIへの書き込み(自動振り分け)
+- カテゴリ⇔アルバム名のマッピングの柔軟な設定化(現状は1対1のハードコード)
 - systemdサービス化・cron設定ファイル自体の作成
 
 ## セットアップ
@@ -29,11 +31,22 @@ NASはrcloneでWebDAVマウントし、ローカルフォルダとして扱う�
 - [uv](https://docs.astral.sh/uv/)
 - [Ollama](https://ollama.com/)(`qwen2.5vl:7b` モデルをpull済みであること)
 - rcloneでNASをWebDAVマウント済みであること
+- Nextcloudのアプリパスワード(「設定」→「セキュリティ」→
+  「新しいアプリパスワードを作成」で発行。通常のログインパスワードは使わない)
 
 ### インストール
 
 ```bash
 uv sync
+cp .env.example .env
+```
+
+`.env`にNextcloudの接続情報を設定してください(`.env`はgit管理対象外です):
+
+```
+NEXTCLOUD_URL=https://your-nextcloud.example.com
+NEXTCLOUD_USER=your-username
+NEXTCLOUD_APP_PASSWORD=your-app-password
 ```
 
 ## 実行方法
@@ -59,6 +72,19 @@ uv run nextcloud-photo-sort
 # 未処理ファイルのうち、最新3件だけ処理する
 NCPS_MAX_FILES=3 uv run nextcloud-photo-sort
 ```
+
+### アルバムへの追加
+
+分類が成功すると、カテゴリ名と同名のNextcloud Photosアルバムへ
+WebDAV COPYでファイルを追加します(アルバムが存在しなければMKCOLで
+自動作成)。ローカルのマウントルート(`src/nextcloud_photo_sort/albums.py`
+の`NAS_MOUNT_ROOT`、デフォルト`/mnt/nas-photos`)がNextcloudの
+WebDAVファイルルート(`/remote.php/dav/files/<user>/`)と対応している
+必要があります。
+
+アルバム追加に失敗した場合(分類自体は成功していても)、そのファイルは
+処理済みとして記録されず、次回実行時に再試行されます
+(その際、分類も再実行されます)。
 
 ### ログ
 

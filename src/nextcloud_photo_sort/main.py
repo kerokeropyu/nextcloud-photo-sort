@@ -6,6 +6,7 @@ cron等から1回だけ実行される想定(常駐ループはしない)。
 import logging
 import os
 
+from nextcloud_photo_sort.albums import add_file_to_album
 from nextcloud_photo_sort.classifier import classify_image
 from nextcloud_photo_sort.logging_config import configure_logging
 from nextcloud_photo_sort.scanner import find_new_image_files
@@ -41,11 +42,12 @@ def main() -> None:
     for path in new_files:
         try:
             result = classify_image(path)
+            logger.info("分類完了 → %s: %s", path, result)
+            add_file_to_album(path, result)
         except Exception:
-            logger.exception("分類に失敗したためスキップします(次回再試行): %s", path)
+            logger.exception("処理に失敗したためスキップします(次回再試行): %s", path)
             continue
 
-        logger.info("分類完了 → %s: %s", path, result)
         processed.add(path)
         save_processed_files(processed, STATE_PATH)
 
