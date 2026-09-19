@@ -2,12 +2,9 @@
 
 import base64
 import io
-import logging
 
 import ollama
 from PIL import Image
-
-logger = logging.getLogger(__name__)
 
 CATEGORIES = ["人物", "風景", "食事", "書類", "スクリーンショット", "その他"]
 
@@ -30,22 +27,18 @@ def encode_image(path: str, max_size: int = 1024) -> str:
 
 
 def classify_image(path: str, model: str = DEFAULT_MODEL) -> str:
-    """画像を分類し、カテゴリ名(または"エラー: ..."文字列)を返す。"""
-    try:
-        img_b64 = encode_image(path)
-        response = ollama.chat(
-            model=model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": CLASSIFY_PROMPT,
-                    "images": [img_b64],
-                }
-            ],
-            options={"num_ctx": 8192},
-        )
-        content = response["message"]["content"]
-        return str(content).strip()
-    except Exception as e:  # noqa: BLE001 - Ollama呼び出し全体を分類失敗として扱う
-        logger.exception("画像分類に失敗しました: %s", path)
-        return f"エラー: {e}"
+    """画像を分類し、カテゴリ名を返す。失敗時は例外を送出する(呼び出し元で処理)。"""
+    img_b64 = encode_image(path)
+    response = ollama.chat(
+        model=model,
+        messages=[
+            {
+                "role": "user",
+                "content": CLASSIFY_PROMPT,
+                "images": [img_b64],
+            }
+        ],
+        options={"num_ctx": 8192},
+    )
+    content = response["message"]["content"]
+    return str(content).strip()
