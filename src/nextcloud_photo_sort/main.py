@@ -13,7 +13,7 @@ PHOTO_ROOT = "/mnt/nas-photos/Photos"
 IMAGE_EXTENSIONS = ["jpg", "png", "webp"]
 
 # 動作確認用に先頭N件のみ処理する(監視・全件処理はまだ実装しない)
-PREVIEW_LIMIT = 10
+PREVIEW_LIMIT = 100
 
 
 def find_image_files(root: str) -> list[str]:
