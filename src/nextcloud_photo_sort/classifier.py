@@ -2,9 +2,12 @@
 
 import base64
 import io
+import logging
 
 import ollama
 from PIL import Image
+
+logger = logging.getLogger(__name__)
 
 CATEGORIES = ["人物", "風景", "食事", "書類", "スクリーンショット", "その他"]
 
@@ -44,4 +47,5 @@ def classify_image(path: str, model: str = DEFAULT_MODEL) -> str:
         content = response["message"]["content"]
         return str(content).strip()
     except Exception as e:  # noqa: BLE001 - Ollama呼び出し全体を分類失敗として扱う
+        logger.exception("画像分類に失敗しました: %s", path)
         return f"エラー: {e}"

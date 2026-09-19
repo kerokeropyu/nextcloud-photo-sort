@@ -42,6 +42,18 @@ uv sync
 uv run nextcloud-photo-sort
 ```
 
+### ログ
+
+実行ログはコンソール出力に加えて、以下のファイルにもローテーション付きで
+書き込まれます(5MBを超えると世代ローテーションし、直近5世代を保持)。
+
+- デフォルト: `~/.local/state/nextcloud-photo-sort/nextcloud-photo-sort.log`
+- 環境変数 `NCPS_LOG_DIR` でディレクトリを上書き可能
+
+```bash
+NCPS_LOG_DIR=/var/log/nextcloud-photo-sort uv run nextcloud-photo-sort
+```
+
 ## 開発
 
 ```bash
